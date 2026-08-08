@@ -32,6 +32,15 @@ a challenge only counts as solved if the recovered input is accepted by the real
 | `affine-cipher-break` | Recover an affine cipher's key from known plaintext |
 | `intoverflow-bypass` | Defeat a bounds check via 8-bit integer overflow |
 
+## CTF writeups (external targets)
+
+Beyond the self-contained battery, `ctf-writeups/` documents **public CTF challenges I
+did not author**, solved with the same z3 methodology — external validation of the technique:
+
+| Challenge | Platform | Category | Technique |
+|-----------|----------|----------|-----------|
+| [vault-door-3](ctf-writeups/vault-door-3/) | picoCTF 2019 | Reverse Engineering (Medium) | model the char-permutation check as constraints, recover the password |
+
 ## Reproduce
 
 ```bash

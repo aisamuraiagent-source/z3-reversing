@@ -1,0 +1,5 @@
+# Integrity-critical files: never convert line endings (would break the hash/signature).
+CERTIFICATE.md      -text
+CERTIFICATE.sha256  -text
+CERTIFICATE.sig.json -text
+laudo_pub.pem       -text

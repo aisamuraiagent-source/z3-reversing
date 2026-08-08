@@ -196,11 +196,11 @@ then executed against the concrete target function; a win counts only if the tar
 **Integrity:** SHA-256(summary) = `{digest}`
 summary = "{summary}"
 """
-        with open("CERTIFICATE.md", "w", encoding="utf-8") as f:
+        with open("CERTIFICATE.md", "w", encoding="utf-8", newline="\n") as f:
             f.write(cert)
         # SHA-256 do arquivo inteiro (para assinatura Ed25519 externa)
         file_hash = hashlib.sha256(cert.encode("utf-8")).hexdigest()
-        with open("CERTIFICATE.sha256", "w", encoding="utf-8") as f:
+        with open("CERTIFICATE.sha256", "w", encoding="utf-8", newline="\n") as f:
             f.write(f"{file_hash}  CERTIFICATE.md\n")
         print(f"\n[+] {wins}/{N} — CERTIFICATE.md emitido.")
         print(f"    SHA-256(summary): {digest}")

@@ -15,8 +15,22 @@ a challenge only counts as solved if the recovered input is accepted by the real
 |------|--------------|
 | `crackme1.py` / `solve1.py` | Serial validator (printable bytes, XOR/sum/product, 8-bit wrap). z3 recovers the unique valid serial and proves uniqueness (`unsat` for any other). |
 | `crackme2_iam.py` / `solve2_iam.py` | Vulnerable IAM/RBAC policy. z3 finds the attribute combination that grants a **guest** `delete` on a sensitive resource — a privilege-escalation bypass — verified against the real policy. |
-| `battery.py` | Generator + solver for **N randomized challenges** across **five families** (serial-keygen, iam-bypass, xor-rotate-keygen, xor-cipher-break, checksum-forgery). Deterministic (fixed seed); each solution verified against its concrete target. |
-| `CERTIFICATE.md` / `CERTIFICATE.sha256` | Result of the battery — **10,000/10,000 solved** — with SHA-256 integrity digests, ready for an external Ed25519 signature. |
+| `battery.py` | Generator + solver for **N randomized challenges** across **nine families**. Deterministic (fixed seed); each solution verified against its concrete target. |
+| `CERTIFICATE.md` / `.sha256` / `.sig.json` | Result of the battery, with SHA-256 integrity digests and an **Ed25519 operator signature** (verified against `laudo_pub.pem`). |
+
+### Challenge families
+
+| Family | Offensive technique |
+|--------|---------------------|
+| `serial-keygen` | Recover a validating serial (keygenning) |
+| `iam-bypass` | Privilege-escalation search over an access policy |
+| `xor-rotate-keygen` | Invert XOR + bit-rotation transforms |
+| `xor-cipher-break` | Known-plaintext repeating-XOR key recovery |
+| `checksum-forgery` | Forge input colliding a weak checksum |
+| `lcg-prng-predict` | Recover a weak PRNG (LCG) state from truncated outputs and predict the next token |
+| `firewall-acl-bypass` | Find a packet that reaches a protected service through an ACL gap (attack-path) |
+| `affine-cipher-break` | Recover an affine cipher's key from known plaintext |
+| `intoverflow-bypass` | Defeat a bounds check via 8-bit integer overflow |
 
 ## Reproduce
 

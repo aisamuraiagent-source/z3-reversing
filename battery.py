@@ -146,12 +146,107 @@ def fam_checksum(rng):
     m = S.model()
     return target([m[x].as_long() for x in b])
 
+# ---------- Família F: previsão de PRNG fraco (LCG seed recovery) ----------
+def fam_lcg(rng):
+    M = 1 << 32
+    a = rng.randrange(1, M) | 1            # multiplicador ímpar
+    c = rng.randrange(0, M)
+    st = [rng.randrange(0, M)]
+    for _ in range(4):
+        st.append((a * st[-1] + c) % M)
+    obs = [s >> 8 for s in st[:4]]         # vaza só os 24 bits altos de 4 saídas
+
+    x = [BitVec(f'x{i}', 32) for i in range(5)]
+    S = Solver()
+    A, C = BitVecVal(a, 32), BitVecVal(c, 32)
+    for i in range(4):
+        S.add(x[i + 1] == A * x[i] + C)
+        S.add(LShR(x[i], 8) == BitVecVal(obs[i], 32))
+    if S.check() != sat:
+        return False
+    m = S.model()
+    return m[x[4]].as_long() == st[4]       # previu a PRÓXIMA saída => token previsto
+
+# ---------- Família G: bypass de firewall/ACL (attack-path) ----------
+def fam_firewall(rng):
+    prot_port = 22
+    allow_max = rng.randint(30, 40)         # regra ampla libera portas <= allow_max (o gap)
+
+    def policy(proto, port, src):
+        if src == 0 and proto == 0 and port == prot_port:   # deny ext-tcp->22
+            return False
+        if port <= allow_max:                               # allow amplo (gap)
+            return True
+        return False
+
+    def bad(proto, port, src):
+        return src == 0 and port == prot_port               # externo alcança porta protegida
+
+    proto = Int('proto'); port = Int('port'); src = Int('src')
+    S = Solver()
+    S.add(proto >= 0, proto <= 1, src >= 0, src <= 1, port >= 0, port <= 65)
+    deny = And(src == 0, proto == 0, port == prot_port)
+    allow = And(Not(deny), port <= allow_max)
+    S.add(allow, src == 0, port == prot_port)
+    if S.check() != sat:
+        return False
+    m = S.model()
+    p, po, sr = m[proto].as_long(), m[port].as_long(), m[src].as_long()
+    return policy(p, po, sr) and bad(p, po, sr)
+
+# ---------- Família H: quebra de cifra afim (recupera a chave) ----------
+def fam_affine(rng):
+    A = rng.randrange(1, 256) | 1           # ímpar => invertível mod 256
+    B = rng.randrange(0, 256)
+    n = rng.randint(4, 8)
+    pt = [rng.randint(0x20, 0x7e) for _ in range(n)]
+    ct = [(A * p + B) & 0xff for p in pt]
+
+    def target(a, b):
+        return all((a * pt[i] + b) & 0xff == ct[i] for i in range(n))
+
+    a = BitVec('a', 8); b = BitVec('b', 8)
+    S = Solver()
+    for i in range(n):
+        S.add(a * pt[i] + b == ct[i])
+    if S.check() != sat:
+        return False
+    m = S.model()
+    return target(m[a].as_long(), m[b].as_long())
+
+# ---------- Família I: bypass por integer overflow (wrap de 8 bits) ----------
+def fam_overflow(rng):
+    HEADER = rng.randint(200, 250)
+    threshold = rng.randint(10, 30)
+    safe_len = 64
+
+    def check_passes(length):
+        return ((length + HEADER) & 0xff) <= threshold     # checagem falha (wrap)
+
+    def bad(length):
+        return length > safe_len                            # tamanho real perigoso
+
+    length = BitVec('length', 16)
+    S = Solver()
+    S.add(UGE(length, 0), ULE(length, 600))
+    total8 = Extract(7, 0, length) + BitVecVal(HEADER, 8)
+    S.add(ULE(total8, BitVecVal(threshold, 8)))
+    S.add(UGT(length, safe_len))
+    if S.check() != sat:
+        return False
+    L = S.model()[length].as_long()
+    return check_passes(L) and bad(L)
+
 FAMILIES = [
     ("serial-keygen", fam_serial),
     ("iam-bypass", fam_iam),
     ("xor-rotate-keygen", fam_xor),
     ("xor-cipher-break", fam_xorcipher),
     ("checksum-forgery", fam_checksum),
+    ("lcg-prng-predict", fam_lcg),
+    ("firewall-acl-bypass", fam_firewall),
+    ("affine-cipher-break", fam_affine),
+    ("intoverflow-bypass", fam_overflow),
 ]
 
 def main():

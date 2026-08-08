@@ -1,9 +1,9 @@
 {
   "signer": "Renan Torres Raad",
-  "issued_at": "2026-08-08T18:39:50.356136-03:00",
+  "issued_at": "2026-08-08T19:02:06.204121-03:00",
   "algorithm": "Ed25519 sobre SHA-256 canonico",
-  "sha256_canonico": "60445e532a01b3353e3974e25a873e7be813a3e150a86bf347038788f3f0157f",
-  "signature_hex": "9a04dac94a847f9a41b5c0b68bbca68571663db3f7626aa496180fcfcbef00b0251014cf9da10f67d3e78f4218e8c68289a774b1c52bd5c8e68afd1fe2624803",
+  "sha256_canonico": "ddd77d31e7aafde6fe1d18ce28ffc8d3533f491360ddecec35a0addae665a5db",
+  "signature_hex": "fa4917a33bebe61712e20a936a153e8c5dbc80b16b658f96db97edd7d4cbb600a21112b3ca4b3619abbe7ed35fd63629c48795aed098ffc99f5b4d4bf6119106",
   "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEArFJQQyrrvetC5ie1z45ogf78IWr6+Na+6Qj5phz5GYA=\n-----END PUBLIC KEY-----\n",
   "status": "signed"
 }

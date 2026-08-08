@@ -40,6 +40,7 @@ did not author**, solved with the same z3 methodology — external validation of
 | Challenge | Platform | Category | Technique |
 |-----------|----------|----------|-----------|
 | [vault-door-3](ctf-writeups/vault-door-3/) | picoCTF 2019 | Reverse Engineering (Medium) | model the char-permutation check as constraints, recover the password |
+| [vault-door-6](ctf-writeups/vault-door-6/) | picoCTF 2019 | Reverse Engineering (Medium) | model the per-byte XOR check as constraints, recover the password |
 
 ## Reproduce
 

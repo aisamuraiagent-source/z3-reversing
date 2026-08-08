@@ -15,8 +15,8 @@ a challenge only counts as solved if the recovered input is accepted by the real
 |------|--------------|
 | `crackme1.py` / `solve1.py` | Serial validator (printable bytes, XOR/sum/product, 8-bit wrap). z3 recovers the unique valid serial and proves uniqueness (`unsat` for any other). |
 | `crackme2_iam.py` / `solve2_iam.py` | Vulnerable IAM/RBAC policy. z3 finds the attribute combination that grants a **guest** `delete` on a sensitive resource — a privilege-escalation bypass — verified against the real policy. |
-| `battery.py` | Generator + solver for **1000 randomized challenges** across three families (serial-keygen, iam-bypass, xor-rotate-keygen). Deterministic (fixed seed); each solution verified against its concrete target. |
-| `CERTIFICATE.md` | Result of the battery: **1000/1000 solved**, with a SHA-256 integrity digest of the run summary. |
+| `battery.py` | Generator + solver for **N randomized challenges** across **five families** (serial-keygen, iam-bypass, xor-rotate-keygen, xor-cipher-break, checksum-forgery). Deterministic (fixed seed); each solution verified against its concrete target. |
+| `CERTIFICATE.md` / `CERTIFICATE.sha256` | Result of the battery — **10,000/10,000 solved** — with SHA-256 integrity digests, ready for an external Ed25519 signature. |
 
 ## Reproduce
 
@@ -24,7 +24,7 @@ a challenge only counts as solved if the recovered input is accepted by the real
 pip install z3-solver
 python solve1.py            # recover the serial + prove uniqueness
 python solve2_iam.py        # find the IAM privilege-escalation bypass
-python battery.py 1000      # 1000/1000, emits CERTIFICATE.md
+python battery.py 10000     # 10000/10000, emits CERTIFICATE.md + .sha256
 ```
 
 ## Why this matters

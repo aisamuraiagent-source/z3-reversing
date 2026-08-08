@@ -101,7 +101,58 @@ def fam_xor(rng):
     m = S.model()
     return target([m[x].as_long() for x in k])
 
-FAMILIES = [("serial-keygen", fam_serial), ("iam-bypass", fam_iam), ("xor-rotate-keygen", fam_xor)]
+# ---------- Família D: quebra de cifra XOR (known-plaintext) ----------
+def fam_xorcipher(rng):
+    L = rng.randint(3, 6)                     # comprimento da chave repetida
+    key = [rng.randint(0, 255) for _ in range(L)]
+    n = rng.randint(L * 2, L * 3)
+    pt = [rng.randint(0x20, 0x7e) for _ in range(n)]   # plaintext conhecido
+    ct = [pt[i] ^ key[i % L] for i in range(n)]        # ciphertext
+
+    def target(cand):
+        return len(cand) == L and all((ct[i] ^ cand[i % L]) == pt[i] for i in range(n))
+
+    S = Solver()
+    k = [BitVec(f'k{i}', 8) for i in range(L)]
+    for i in range(n):
+        S.add(k[i % L] ^ ct[i] == pt[i])
+    if S.check() != sat:
+        return False
+    m = S.model()
+    return target([m[x].as_long() for x in k])
+
+# ---------- Família E: forja de checksum (colisão em checksum fraco) ----------
+def fam_checksum(rng):
+    n = rng.randint(6, 10)
+    marker = rng.randint(0x21, 0x7e)
+    sol = [marker] + [rng.randint(0x20, 0x7e) for _ in range(n - 1)]
+    tgt_sum = sum(sol) & 0xff
+    tgt_xor = functools.reduce(lambda a, b: a ^ b, sol)
+
+    def target(bs):
+        if len(bs) != n or any(not (0x20 <= c <= 0x7e) for c in bs): return False
+        if bs[0] != marker: return False
+        if (sum(bs) & 0xff) != tgt_sum: return False
+        return functools.reduce(lambda a, b: a ^ b, bs) == tgt_xor
+
+    S = Solver()
+    b = [BitVec(f'b{i}', 8) for i in range(n)]
+    for c in b: S.add(c >= 0x20, c <= 0x7e)
+    S.add(b[0] == marker)
+    S.add(functools.reduce(lambda x, y: x + y, b) == tgt_sum)
+    S.add(functools.reduce(lambda x, y: x ^ y, b) == tgt_xor)
+    if S.check() != sat:
+        return False
+    m = S.model()
+    return target([m[x].as_long() for x in b])
+
+FAMILIES = [
+    ("serial-keygen", fam_serial),
+    ("iam-bypass", fam_iam),
+    ("xor-rotate-keygen", fam_xor),
+    ("xor-cipher-break", fam_xorcipher),
+    ("checksum-forgery", fam_checksum),
+]
 
 def main():
     N = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
@@ -123,31 +174,37 @@ def main():
     if fails[:5]:
         print("     primeiras falhas:", fails[:5])
     if wins == N and N >= 1000:
+        fam_list = ",".join(name for name, _ in FAMILIES)
         summary = (f"z3 red-team battery | date={DATE} seed={SEED} | "
-                   f"challenges={N} solved={wins} families=serial-keygen,iam-bypass,xor-rotate-keygen")
+                   f"challenges={N} solved={wins} families={fam_list}")
         digest = hashlib.sha256(summary.encode()).hexdigest()
+        fam_lines = "\n".join(f"- {name}: {per[name]}" for name, _ in FAMILIES)
         cert = f"""# CERTIFICATE — z3 (SMT) Red-Team Battery
 
 **Operator:** Renan Torres Raad
 **Date:** {DATE}
 **Result:** {wins}/{N} challenges solved (100%) — each solution verified against its concrete target.
 
-**Families:**
-- serial-keygen (byte constraints: XOR / sum / product, 8-bit wrap): {per['serial-keygen']}
-- iam-bypass (privilege-escalation search over access policy): {per['iam-bypass']}
-- xor-rotate-keygen (invert XOR+rotate transforms): {per['xor-rotate-keygen']}
+**Families ({len(FAMILIES)}):**
+{fam_lines}
 
 **Method:** for each challenge, the target's rules are modeled as SMT constraints and z3
 computes an input satisfying all of them at once (no brute force). The returned input is
 then executed against the concrete target function; a win counts only if the target accepts it.
 
-**Reproducible:** `python battery.py 1000` (seed={SEED}, deterministic).
+**Reproducible:** `python battery.py {N}` (seed={SEED}, deterministic).
 **Integrity:** SHA-256(summary) = `{digest}`
 summary = "{summary}"
 """
         with open("CERTIFICATE.md", "w", encoding="utf-8") as f:
             f.write(cert)
-        print(f"\n[+] 1000/1000 — CERTIFICATE.md emitido. SHA-256: {digest}")
+        # SHA-256 do arquivo inteiro (para assinatura Ed25519 externa)
+        file_hash = hashlib.sha256(cert.encode("utf-8")).hexdigest()
+        with open("CERTIFICATE.sha256", "w", encoding="utf-8") as f:
+            f.write(f"{file_hash}  CERTIFICATE.md\n")
+        print(f"\n[+] {wins}/{N} — CERTIFICATE.md emitido.")
+        print(f"    SHA-256(summary): {digest}")
+        print(f"    SHA-256(file):    {file_hash}  -> CERTIFICATE.sha256 (para assinar Ed25519)")
     return 0 if wins == N else 1
 
 sys.exit(main())

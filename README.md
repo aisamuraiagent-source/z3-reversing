@@ -41,6 +41,7 @@ did not author**, solved with the same z3 methodology — external validation of
 |-----------|----------|----------|-----------|
 | [vault-door-3](ctf-writeups/vault-door-3/) | picoCTF 2019 | Reverse Engineering (Medium) | model the char-permutation check as constraints, recover the password |
 | [vault-door-6](ctf-writeups/vault-door-6/) | picoCTF 2019 | Reverse Engineering (Medium) | model the per-byte XOR check as constraints, recover the password |
+| [vault-door-8](ctf-writeups/vault-door-8/) | picoCTF 2019 | Reverse Engineering (Hard) | model the 8-swap bit-transposition over 8-bit vectors, recover the password |
 
 ## Reproduce
 

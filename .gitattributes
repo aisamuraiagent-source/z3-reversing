@@ -3,3 +3,5 @@ CERTIFICATE.md      -text
 CERTIFICATE.sha256  -text
 CERTIFICATE.sig.json -text
 laudo_pub.pem       -text
+ATTESTATION.md      -text
+ATTESTATION.sig.json -text
